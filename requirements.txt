@@ -1,0 +1,6 @@
+pre-commit
+requests
+rich
+flask
+python-dotenv
+mysql-connector-python
