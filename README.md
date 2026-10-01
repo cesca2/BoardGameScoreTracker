@@ -210,7 +210,7 @@ curl -X POST {base_url}/scoreboards \
 
 ## Database information
 
-The application is supported by a MySQL database. The database is initialised at the startup of the API (including the creation of the database and required tables) using the `db_init` method defined in `BoardGameScoreTrackerAPI/db_utils.py`.
+The application is supported by a MySQL database. The database is initialised at the startup of the API (including the creation of the database and required tables) using the `db_init` method defined in `db.py`.
 
 ### Database schema
 ![schema](./assets/db_schema.png)
@@ -235,7 +235,7 @@ To run this project, you will need to add the following environment variables to
 * `API_HOST` - Host for API application
 * `API_PORT` - Port for API application
 
-An example format is provided in `BoardGameScoreTrackerAPI/.env.example`. These example values can be edited and copied into a `.env`file.
+An example format is provided in `env.example`. These example values can be edited and copied into a `.env`file.
 
 ### How to run
 
@@ -248,18 +248,17 @@ pip install -r requirements.txt
 
 The API can be set up and ran as follows:
 ```
-python BoardGameScoreTrackerAPI.py/app.py
+python run_api.py
 ```
 Then in a separate terminal run the user interface (provided by a python console application):
 ```
-python main.py
+python run_client.py
 ``` 
 
 ### Testing
-Tests are provided for the API routes in `./BoardGameScoreTrackerAPI/test_app.py`. Tests can be ran as follows (from the `BoardGameScoreTrackerAPI` directory):
+Tests are provided for the API routes in `tests/test_api.py`. Tests can be ran as follows:
 ```
-cd BoardGameScoreTrackerAPI
-python -m unittest
+python -m unittest discover -s tests -v
 ```
 
 ### File formatting

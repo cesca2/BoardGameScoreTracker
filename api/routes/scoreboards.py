@@ -1,0 +1,99 @@
+from api.queries.scoreboard_queries import *
+from api.utils import check_input_scoreboard
+from flask import Blueprint, current_app, jsonify, request
+
+bp = Blueprint("scoreboards", __name__, url_prefix="/scoreboards")
+
+
+@bp.get("")
+def get_scoreboards():
+    search_params = {
+        "game": request.args.get("game"),
+        "player": request.args.get("player"),
+    }
+    try:
+
+        scoreboards = fetch_all_scoreboards(
+            current_app.config["DATABASE"], **search_params
+        )
+        if scoreboards:
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Retrieved {len(scoreboards)} scoreboards for {str(search_params).replace("None", "all")}.",
+                        "data": scoreboards,
+                    }
+                ),
+                200,
+            )
+        elif scoreboards == []:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"No scoreboards currently exist in our records for {str(search_params).replace("None", "all")}",
+                        "error_code": "RESOURCE_NOT_FOUND",
+                    }
+                ),
+                404,
+            )
+    # catches e.g. when connection is None (i.e. cannot connect to MySQL server), problem with SQL queries in development etc...
+    except DatabaseException as err:
+        logger.error(err)
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Server error: {err!s}.",
+                    "error_code": "SERVER_ERROR",
+                }
+            ),
+            500,
+        )
+
+
+@bp.post("")
+def create_scoreboard():
+    data = request.json
+    # do validation on input data format
+    check, message = check_input_scoreboard(data)
+    if not check:
+        logger.error("Check failed")
+        logger.error(message)
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Invalid input data for scoreboard: {message}.",
+                    "error_code": "INVALID_INPUT",
+                }
+            ),
+            400,
+        )
+    else:
+        try:
+            id = insert_new_scoreboard(current_app.config["DATABASE"], data)
+            new_scoreboard = fetch_scoreboard_by_id(current_app.config["DATABASE"], id)
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"New scoreboard created with ID {id}.",
+                        "data": new_scoreboard,
+                    }
+                ),
+                201,
+            )
+        except DatabaseException as err:
+            logger.error(err)
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Server error: {err!s}.",
+                        "error_code": "SERVER_ERROR",
+                    }
+                ),
+                500,
+            )

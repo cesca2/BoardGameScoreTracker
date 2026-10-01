@@ -1,17 +1,20 @@
 import unittest
 
-from app import create_app
-from config import logger
-from db_utils import create_connection, insert_new_scoreboard
+from api import create_app
+from api.config import logger
+from api.db import create_connection
+from api.queries.scoreboard_queries import insert_new_scoreboard
 
 
 class ApiTestCase(unittest.TestCase):
 
     def setUp(self):
         # setup app
-        app, self.db = create_app(testing=True)
+        self.app = create_app(testing=True)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
         # setup client to run requests in tests
-        self.client = app.test_client()
+        self.client = self.app.test_client()
         # share mock data between methods for initialising db where necessary
         self.init_scoreboards = [
             {
@@ -69,10 +72,15 @@ class ApiTestCase(unittest.TestCase):
         # drop database after each test for clean db per test
 
         try:
-            with create_connection(self.db) as connection:
-                logger.info(f"Dropping database {self.db["database"]}")
+            with create_connection(self.app.config["DATABASE"]) as connection:
+                logger.info(
+                    f"Dropping database {self.app.config["DATABASE"]["database"]}"
+                )
                 cursor = connection.cursor()
-                cursor.execute(f"DROP DATABASE {self.db["database"]}")
+                cursor.execute(
+                    f"DROP DATABASE {self.app.config["DATABASE"]["database"]}"
+                )
+            self.ctx.pop()
         finally:
             if cursor:
                 cursor.close()
@@ -82,7 +90,7 @@ class ApiTestCase(unittest.TestCase):
         # Insert mock data for this test
 
         for scoreboard in self.init_scoreboards:
-            insert_new_scoreboard(self.db, scoreboard)
+            insert_new_scoreboard(self.app.config["DATABASE"], scoreboard)
         # Act
         response = self.client.get("/scoreboards")
         # Assert
@@ -118,7 +126,7 @@ class ApiTestCase(unittest.TestCase):
         # Insert mock data for this test
 
         for scoreboard in self.init_scoreboards:
-            insert_new_scoreboard(self.db, scoreboard)
+            insert_new_scoreboard(self.app.config["DATABASE"], scoreboard)
         name = "Cat"
         # Act
         response = self.client.get(
@@ -150,7 +158,7 @@ class ApiTestCase(unittest.TestCase):
         # Insert mock data for this test
 
         for scoreboard in self.init_scoreboards:
-            insert_new_scoreboard(self.db, scoreboard)
+            insert_new_scoreboard(self.app.config["DATABASE"], scoreboard)
         game = "Ark Nova"
         # Act
         response = self.client.get(
@@ -182,7 +190,7 @@ class ApiTestCase(unittest.TestCase):
         # Insert mock data for this test
 
         for scoreboard in self.init_scoreboards:
-            insert_new_scoreboard(self.db, scoreboard)
+            insert_new_scoreboard(self.app.config["DATABASE"], scoreboard)
         game = "Ark Nova"
         name = "Cat"
         # Act
@@ -225,7 +233,7 @@ class ApiTestCase(unittest.TestCase):
         # Insert mock data for this test
 
         for scoreboard in self.init_scoreboards:
-            insert_new_scoreboard(self.db, scoreboard)
+            insert_new_scoreboard(self.app.config["DATABASE"], scoreboard)
         # Act
         response = self.client.get("/player-stats/cat")
         # Assert

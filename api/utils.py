@@ -1,4 +1,4 @@
-from config import (
+from api.config import (
     APP_CREATE_SCOREBOARD_FIELDS,
     APP_CREATE_SCOREBOARD_PLAYERS_FIELDS,
     APP_CREATE_SCOREBOARD_PLAYERS_TYPES,
