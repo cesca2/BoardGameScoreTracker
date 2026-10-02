@@ -3,7 +3,7 @@ import unittest
 from api import create_app
 from api.config import logger
 from api.db import create_connection
-from api.queries.scoreboard_queries import insert_new_scoreboard
+from api.queries.scoreboard_queries import fetch_scoreboard_by_id, insert_new_scoreboard
 
 
 class ApiTestCase(unittest.TestCase):
@@ -416,3 +416,32 @@ class ApiTestCase(unittest.TestCase):
                 self.assertIn(
                     "Invalid input data for scoreboard", response.json["message"]
                 )
+
+    def test_delete_scoreboard(self):
+        # Arrange
+        scoreboard_id = insert_new_scoreboard(
+            self.app.config["DATABASE"], self.init_scoreboards[0]
+        )
+        # Act
+        response = self.client.delete(
+            f"/scoreboards/{scoreboard_id}",
+        )
+        # Assert
+        # check status code
+        self.assertEqual(response.status_code, 200)
+        # check record does not exist
+        self.assertIsNone(
+            fetch_scoreboard_by_id(self.app.config["DATABASE"], scoreboard_id)
+        )
+
+    def test_delete_scoreboard_no_record(self):
+        # Arrange - db is initially empty
+        # Act
+        response = self.client.delete(
+            "/scoreboards/0",
+        )
+        # Assert
+        # check record does not exist - ensures integrity of test
+        self.assertIsNone(fetch_scoreboard_by_id(self.app.config["DATABASE"], 0))
+        # check status code
+        self.assertEqual(response.status_code, 404)

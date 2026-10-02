@@ -6,6 +6,32 @@ from api.db import (
 )
 
 
+def delete_scoreboard_by_id(database_config, scoreboard_id: int) -> int:
+    cursor = None
+    try:
+        with create_connection(database_config) as connection:
+            cursor = connection.cursor()
+
+            cursor.execute(
+                """
+                DELETE FROM sessions
+                WHERE session_id = %s
+                """,
+                (scoreboard_id,),
+            )
+            impact = cursor.rowcount
+            if impact == 1:
+                connection.commit()
+            return impact
+
+    except mysql.connector.Error as err:
+        logger.error(f"Error processing db operation (delete_scoreboard_by_id): {err}")
+        raise DatabaseException("Database operation failed")
+    finally:
+        if cursor:
+            cursor.close()
+
+
 def fetch_scoreboard_by_id(database_config, scoreboard_id: int) -> dict:
     cursor = None
     try:

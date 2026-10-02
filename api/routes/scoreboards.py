@@ -97,3 +97,56 @@ def create_scoreboard():
                 ),
                 500,
             )
+
+
+@bp.delete("/<int:id>")
+def delete_scoreboard(id):
+
+    try:
+        impact = delete_scoreboard_by_id(current_app.config["DATABASE"], id)
+        if impact == 1:
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Scoreboard deleted with ID {id}.",
+                    }
+                ),
+                200,
+            )
+        elif impact == 0:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"No scoreboard currently exists in records with ID {id}.",
+                        "error_code": "RESOURCE_NOT_FOUND",
+                    }
+                ),
+                404,
+            )
+        else:
+            logger.error(f"Delete operation for {id} triggered {impact} deletions (>1)")
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "Server error occurred.",
+                        "error_code": "SERVER_ERROR",
+                    }
+                ),
+                500,
+            )
+
+    except DatabaseException as err:
+        logger.error(err)
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Server error: {err!s}.",
+                    "error_code": "SERVER_ERROR",
+                }
+            ),
+            500,
+        )
