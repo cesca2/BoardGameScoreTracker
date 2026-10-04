@@ -323,6 +323,9 @@ class ApiTestCase(unittest.TestCase):
             {k: response.json["data"][k] for k in ["players", "title"]},
             test_scoreboard_dto,
         )
+        self.assertEqual(
+            response.location, f"/scoreboards/{response.json["data"]["id"]}"
+        )
 
     def test_create_scoreboard_incorrect_dto(self):
         # Arrange

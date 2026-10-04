@@ -1,6 +1,6 @@
 from api.queries.scoreboard_queries import *
 from api.utils import check_input_scoreboard
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, url_for
 
 bp = Blueprint("scoreboards", __name__, url_prefix="/scoreboards")
 
@@ -128,7 +128,13 @@ def create_scoreboard():
                     }
                 ),
                 201,
+                {
+                    "Location": url_for(
+                        "scoreboards.get_scoreboard_by_id", scoreboard_id=id
+                    )
+                },
             )
+
         except DatabaseException as err:
             logger.error(err)
             return (
