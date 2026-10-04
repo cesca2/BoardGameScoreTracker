@@ -149,17 +149,105 @@ def create_scoreboard():
             )
 
 
-@bp.delete("/<int:id>")
-def delete_scoreboard(id):
+@bp.put("/<int:scoreboard_id>")
+def update_scoreboard_by_id(scoreboard_id):
+    data = request.json
+    # do validation on input data format
+    check, message = check_input_scoreboard(data)
+    if not check:
+        logger.error("Check failed")
+        logger.error(message)
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Invalid input data for scoreboard: {message}.",
+                    "error_code": "INVALID_INPUT",
+                }
+            ),
+            400,
+        )
+    else:
+        try:
+            scoreboard_exists = fetch_scoreboard_by_id(
+                current_app.config["DATABASE"], scoreboard_id
+            )
+
+            if scoreboard_exists is not None:
+                impact = update_scoreboard(
+                    current_app.config["DATABASE"], data, scoreboard_id
+                )
+                new_scoreboard = fetch_scoreboard_by_id(
+                    current_app.config["DATABASE"], scoreboard_id
+                )
+                if impact > 0:
+                    return (
+                        jsonify(
+                            {
+                                "status": "success",
+                                "message": f"Scoreboard with ID {scoreboard_id} updated.",
+                                "data": new_scoreboard,
+                            }
+                        ),
+                        200,
+                        {
+                            "Location": url_for(
+                                "scoreboards.get_scoreboard_by_id",
+                                scoreboard_id=scoreboard_id,
+                            )
+                        },
+                    )
+                else:
+                    logger.error(
+                        f"Update operation for {id} triggered {impact} deletions"
+                    )
+                    return (
+                        jsonify(
+                            {
+                                "status": "error",
+                                "message": "Server error occurred.",
+                                "error_code": "SERVER_ERROR",
+                            }
+                        ),
+                        500,
+                    )
+            else:
+                return (
+                    jsonify(
+                        {
+                            "status": "error",
+                            "message": f"No scoreboard currently exists in records with ID {scoreboard_id}.",
+                            "error_code": "RESOURCE_NOT_FOUND",
+                        }
+                    ),
+                    404,
+                )
+
+        except DatabaseException as err:
+            logger.error(err)
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Server error: {err!s}.",
+                        "error_code": "SERVER_ERROR",
+                    }
+                ),
+                500,
+            )
+
+
+@bp.delete("/<int:scoreboard_id>")
+def delete_scoreboard(scoreboard_id):
 
     try:
-        impact = delete_scoreboard_by_id(current_app.config["DATABASE"], id)
+        impact = delete_scoreboard_by_id(current_app.config["DATABASE"], scoreboard_id)
         if impact == 1:
             return (
                 jsonify(
                     {
                         "status": "success",
-                        "message": f"Scoreboard deleted with ID {id}.",
+                        "message": f"Scoreboard deleted with ID {scoreboard_id}.",
                     }
                 ),
                 200,
@@ -169,14 +257,16 @@ def delete_scoreboard(id):
                 jsonify(
                     {
                         "status": "error",
-                        "message": f"No scoreboard currently exists in records with ID {id}.",
+                        "message": f"No scoreboard currently exists in records with ID {scoreboard_id}.",
                         "error_code": "RESOURCE_NOT_FOUND",
                     }
                 ),
                 404,
             )
         else:
-            logger.error(f"Delete operation for {id} triggered {impact} deletions (>1)")
+            logger.error(
+                f"Delete operation for {scoreboard_id} triggered {impact} deletions (>1)"
+            )
             return (
                 jsonify(
                     {

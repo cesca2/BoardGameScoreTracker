@@ -207,3 +207,76 @@ def insert_new_scoreboard(database_config, scoreboard) -> int:
     finally:
         if cursor:
             cursor.close()
+
+
+def update_scoreboard(database_config, scoreboard, id) -> int:
+    cursor = None
+    updated_rows = 0
+    try:
+        with create_connection(database_config) as connection:
+
+            cursor = connection.cursor()
+
+            cursor.execute(
+                """
+                INSERT IGNORE INTO games (title)
+                VALUES (%s);
+                """,
+                (scoreboard["title"],),
+            )
+            cursor.execute(
+                """
+                SELECT game_id FROM games
+                WHERE title = %s INTO @game_id
+                """,
+                (scoreboard["title"],),
+            )
+            cursor.execute(
+                """
+                UPDATE sessions
+                SET game_id = @game_id
+                WHERE session_id = %s
+                """,
+                (id,),
+            )
+            updated_rows += cursor.rowcount
+            # scoreboard can be uniquely identified by the session id
+            scoreboard_id = cursor.lastrowid
+            # now know about cursor.lastrowid user-defined variable not strictly necessary here
+            cursor.execute(f"""SELECT {id} INTO @session_id""")
+            # clear child entries from junction table to easily update
+            cursor.execute(
+                """DELETE FROM sessions_players WHERE session_id = @session_id"""
+            )
+            for k, v in scoreboard["players"].items():
+                cursor.execute(
+                    """
+                    INSERT IGNORE INTO players (nickname)
+                    VALUES ( %s )
+                    """,
+                    (k,),
+                )
+                cursor.execute(
+                    """
+                    SELECT player_id FROM players
+                    WHERE nickname = %s INTO @player_id
+                    """,
+                    (k,),
+                )
+                cursor.execute(
+                    """
+                    INSERT INTO sessions_players (session_id, player_id, score, is_win)
+                    VALUES (@session_id, @player_id, %s, %s);
+                    """,
+                    (v["score"], v["win"]),
+                )
+                updated_rows += cursor.rowcount
+            connection.commit()
+            return updated_rows
+
+    except mysql.connector.Error as err:
+        logger.error(f"Error processing db operation (insert_new_scoredboard): {err}")
+        raise DatabaseException("Database operation failed")
+    finally:
+        if cursor:
+            cursor.close()

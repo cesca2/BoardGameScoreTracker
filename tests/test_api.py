@@ -443,6 +443,61 @@ class ApiTestCase(unittest.TestCase):
                     "Invalid input data for scoreboard", response.json["message"]
                 )
 
+    def test_update_scoreboard(self):
+        # Arrange
+        # initialise db with a record of known id
+        scoreboard_id = insert_new_scoreboard(
+            self.app.config["DATABASE"], self.init_scoreboards[0]
+        )
+        # create test data for post request
+        test_scoreboard_dto = {
+            "title": "Test Game",
+            "players": {
+                "Player1": {"score": 100, "win": True},
+                "Player2": {"score": 70, "win": False},
+            },
+        }
+        # Act
+        response = self.client.put(
+            f"/scoreboards/{scoreboard_id}",
+            json=test_scoreboard_dto,
+        )
+        get_response = self.client.get(str(response.location))
+
+        # Assert
+        # check data is equal to new dto at location
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(
+            {k: get_response.json["data"][k] for k in ["players", "title"]},
+            test_scoreboard_dto,
+        )
+        # test endpont status code and data in response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            {k: response.json["data"][k] for k in ["players", "title"]},
+            test_scoreboard_dto,
+        )
+        self.assertEqual(
+            response.location, f"/scoreboards/{response.json["data"]["id"]}"
+        )
+
+    def test_update_scoreboard_no_target_record(self):
+        # Arrange - db is initially empty
+        test_scoreboard_dto = {
+            "title": "Test Game",
+            "players": {
+                "Player1": {"score": 100, "win": True},
+                "Player2": {"score": 70, "win": False},
+            },
+        }
+        # Act
+        response = self.client.put("/scoreboards/0", json=test_scoreboard_dto)
+        # Assert
+        # check record does not exist - ensures integrity of test
+        self.assertIsNone(fetch_scoreboard_by_id(self.app.config["DATABASE"], 0))
+        # check status code
+        self.assertEqual(response.status_code, 404)
+
     def test_delete_scoreboard(self):
         # Arrange
         scoreboard_id = insert_new_scoreboard(
@@ -460,7 +515,7 @@ class ApiTestCase(unittest.TestCase):
             fetch_scoreboard_by_id(self.app.config["DATABASE"], scoreboard_id)
         )
 
-    def test_delete_scoreboard_no_record(self):
+    def test_delete_scoreboard_no_target_record(self):
         # Arrange - db is initially empty
         # Act
         response = self.client.delete(
