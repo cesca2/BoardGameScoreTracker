@@ -38,18 +38,22 @@ The following demos are included to demonstrate both the behaviour of the consol
 
 ## API reference
 
-### Retrieve all recorded scoreboards 
+### Retrieve recorded scoreboards 
 
 ```http
   GET /scoreboards
 ```
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `id`      | `int` | **Optional**. Id of item to fetch |
+
 | Query Parameters | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
 | `game`      | `string` | **Optional**. Key term to filter results by game tilte  |
 | `player`      | `string` | **Optional**. Key term to filter results by participating player name  |
 
 
-**EXAMPLE OUTPUT**:
+**EXAMPLE OUTPUT:**:
 ```json
 {
     "data": [
@@ -167,13 +171,69 @@ curl -X POST {base_url}/scoreboards \
 }
 ```
 
+### Update scoreboard
+
+```http
+  PUT /scoreboards/${id}
+```
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `id`      | `int` | **Required**. Id of item to update. |
+
+**EXAMPLE PUT REQUEST:** 
+
+`base_url =  DB_HOST:DB_PORT`
+```bash
+curl -X PUT {base_url}/scoreboards/3 \
+-H "Content-Type: application/json" \
+-d '{"title": "Ark Nova", "players": {"Cat": {"win": false, "score": 92}, "Joe": {"win": true, "score": 130}}}'
+```
+**EXAMPLE OUTPUT:**
+```json
+{
+  "data": {
+    "date": "Thu, 01 Oct 2026",
+    "id": 3,
+    "players": {
+      "Cat": {
+        "score": 92,
+        "win": false
+      },
+      "Joe": {
+        "score": 130,
+        "win": true
+      }
+    },
+    "title": "Ark Nova"
+  },
+  "message": "Scoreboard with ID 3 updated.",
+  "status": "success"
+}
+
+```
+### Delete scoreboard
+
+```http
+  DELETE /scoreboards/${id}
+```
+
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `id`      | `int` | **Required**. Id of item to delete. |
+**EXAMPLE OUTPUT:**
+```json
+{
+  "message": "Scoreboard deleted with ID 3.",
+  "status": "success"
+}
+```
 ### Retrieve player stats by player name
 
 ```http
   GET /player-stats/:player_name
 ```
 
-**EXAMPLE OUTPUT**:
+**EXAMPLE OUTPUT:**:
 ```json
 {
     "data": {
