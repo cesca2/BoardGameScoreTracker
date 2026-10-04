@@ -53,6 +53,50 @@ def get_scoreboards():
         )
 
 
+@bp.get("/<int:scoreboard_id>")
+def get_scoreboard_by_id(scoreboard_id):
+    try:
+
+        scoreboard = fetch_scoreboard_by_id(
+            current_app.config["DATABASE"], scoreboard_id
+        )
+        if scoreboard:
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Retrieved scoreboard for ID {scoreboard_id}.",
+                        "data": scoreboard,
+                    }
+                ),
+                200,
+            )
+        elif scoreboard is None:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"No scoreboard currently exists in our records for ID {scoreboard_id}.",
+                        "error_code": "RESOURCE_NOT_FOUND",
+                    }
+                ),
+                404,
+            )
+    # catches e.g. when connection is None (i.e. cannot connect to MySQL server), problem with SQL queries in development etc...
+    except DatabaseException as err:
+        logger.error(err)
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Server error: {err!s}.",
+                    "error_code": "SERVER_ERROR",
+                }
+            ),
+            500,
+        )
+
+
 @bp.post("")
 def create_scoreboard():
     data = request.json

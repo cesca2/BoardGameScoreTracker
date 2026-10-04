@@ -110,6 +110,29 @@ class ApiTestCase(unittest.TestCase):
                 {k: scoreboard[k] for k in ["players", "title"]}, self.init_scoreboards
             )
 
+    def test_get_scoreboard_by_id(self):
+        # Arrange
+        # Insert mock data for this test
+        scoreboard = self.init_scoreboards[0]
+        scoreboard_id = insert_new_scoreboard(self.app.config["DATABASE"], scoreboard)
+        # Act
+        response = self.client.get(f"/scoreboards/{scoreboard_id}")
+        # Assert
+        # check status code
+        self.assertEqual(response.status_code, 200)
+        # check list instance
+        self.assertIsInstance(response.json["data"], dict)
+        # check expected top-level keys in first object in response list are present
+        self.assertIn("title", response.json["data"])
+        self.assertIn("players", response.json["data"])
+        self.assertIn("date", response.json["data"])
+        self.assertIn("id", response.json["data"])
+        # check scoreboard from dto is equivalent to that returned in response
+        self.assertEqual(
+            {k: response.json["data"][k] for k in ["players", "title"]},
+            scoreboard,
+        )
+
     def test_get_scoreboards_query_no_results(self):
         # Arrange
         name = "Fake"
