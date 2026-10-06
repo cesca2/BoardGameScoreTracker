@@ -1,6 +1,7 @@
+from flask import Blueprint, current_app, jsonify, request, url_for
+
 from api.queries.scoreboard_queries import *
 from api.utils import check_input_scoreboard
-from flask import Blueprint, current_app, jsonify, request, url_for
 
 bp = Blueprint("scoreboards", __name__, url_prefix="/scoreboards")
 

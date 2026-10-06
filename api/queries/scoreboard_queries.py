@@ -1,4 +1,5 @@
 import mysql.connector
+
 from api.config import logger
 from api.db import (
     DatabaseException,
@@ -240,8 +241,6 @@ def update_scoreboard(database_config, scoreboard, id) -> int:
                 (id,),
             )
             updated_rows += cursor.rowcount
-            # scoreboard can be uniquely identified by the session id
-            scoreboard_id = cursor.lastrowid
             # now know about cursor.lastrowid user-defined variable not strictly necessary here
             cursor.execute(f"""SELECT {id} INTO @session_id""")
             # clear child entries from junction table to easily update

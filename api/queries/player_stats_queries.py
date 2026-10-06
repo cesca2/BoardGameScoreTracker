@@ -1,4 +1,5 @@
 import mysql.connector
+
 from api.config import logger
 from api.db import (
     DatabaseException,

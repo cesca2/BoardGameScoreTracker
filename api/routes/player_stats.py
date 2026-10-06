@@ -1,5 +1,6 @@
-from api.queries.player_stats_queries import *
 from flask import Blueprint, current_app, jsonify
+
+from api.queries.player_stats_queries import *
 
 bp = Blueprint("player-stats", __name__, url_prefix="/player-stats")
 
