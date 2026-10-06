@@ -1,5 +1,7 @@
 # Board Game Score Tracker API
 
+[![pre-commit](https://github.com/cesca2/BoardGameScoreTracker/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/cesca2/BoardGameScoreTracker/actions/workflows/pre-commit.yml)
+
 ## Features
 *  Web API (Flask) records scoreboards for board games using a MySQL database including data on:
     * Board game name
