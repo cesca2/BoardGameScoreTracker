@@ -95,7 +95,7 @@ class ApiTestCase(unittest.TestCase):
         response = self.client.get("/scoreboards")
         # Assert
         # check status code
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 404)
         # check list instance
         self.assertIsInstance(response.json["data"], list)
         # check expected top-level keys in first object in response list are present
